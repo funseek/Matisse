@@ -42,9 +42,9 @@ public class MediaStoreCompat {
 
     private final WeakReference<Activity> mContext;
     private final WeakReference<Fragment> mFragment;
-    private       CaptureStrategy         mCaptureStrategy;
-    private       Uri                     mCurrentPhotoUri;
-    private       String                  mCurrentPhotoPath;
+    private CaptureStrategy mCaptureStrategy;
+    private Uri mCurrentPhotoUri;
+    private String mCurrentPhotoPath;
 
     public MediaStoreCompat(Activity activity) {
         mContext = new WeakReference<>(activity);
@@ -96,11 +96,12 @@ public class MediaStoreCompat {
                                 Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     }
                 }
-                if (mFragment != null) {
-                    mFragment.get().startActivityForResult(captureIntent, requestCode);
-                } else {
-                    mContext.get().startActivityForResult(captureIntent, requestCode);
-                }
+                ((Activity) context).startActivityForResult(captureIntent, requestCode);
+//                if (mFragment != null) {
+//                    mFragment.get().startActivityForResult(captureIntent, requestCode);
+//                } else {
+//                    mContext.get().startActivityForResult(captureIntent, requestCode);
+//                }
             }
         }
     }
@@ -110,14 +111,14 @@ public class MediaStoreCompat {
         // Create an image file name
         String timeStamp =
                 new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
-        String imageFileName = String.format("JPEG_%s.jpg", timeStamp);
+        String imageFileName = String.format("%s.jpg", timeStamp);
         File storageDir;
         if (mCaptureStrategy.isPublic) {
             storageDir = Environment.getExternalStoragePublicDirectory(
-                    Environment.DIRECTORY_PICTURES);
+                    Environment.DIRECTORY_DCIM);
             if (!storageDir.exists()) storageDir.mkdirs();
         } else {
-            storageDir = mContext.get().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+            storageDir = mContext.get().getExternalFilesDir(Environment.DIRECTORY_DCIM);
         }
         if (mCaptureStrategy.directory != null) {
             storageDir = new File(storageDir, mCaptureStrategy.directory);

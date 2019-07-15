@@ -16,16 +16,23 @@
 package com.zhihu.matisse.internal.ui;
 
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.AppBarLayout;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.yalantis.ucrop.UCrop;
+import com.yalantis.ucrop.UCropFragment;
 import com.zhihu.matisse.R;
 import com.zhihu.matisse.internal.entity.Album;
 import com.zhihu.matisse.internal.entity.Item;
@@ -33,8 +40,14 @@ import com.zhihu.matisse.internal.entity.SelectionSpec;
 import com.zhihu.matisse.internal.model.AlbumMediaCollection;
 import com.zhihu.matisse.internal.model.SelectedItemCollection;
 import com.zhihu.matisse.internal.ui.adapter.AlbumMediaAdapter;
+import com.zhihu.matisse.internal.ui.widget.CheckView;
 import com.zhihu.matisse.internal.ui.widget.MediaGridInset;
 import com.zhihu.matisse.internal.utils.UIUtils;
+
+import java.io.File;
+import java.util.Calendar;
+
+import static com.yalantis.ucrop.UCropFragment.TAG;
 
 public class MediaSelectionFragment extends Fragment implements
         AlbumMediaCollection.AlbumMediaCallbacks, AlbumMediaAdapter.CheckStateListener,
@@ -48,6 +61,12 @@ public class MediaSelectionFragment extends Fragment implements
     private SelectionProvider mSelectionProvider;
     private AlbumMediaAdapter.CheckStateListener mCheckStateListener;
     private AlbumMediaAdapter.OnMediaClickListener mOnMediaClickListener;
+    private static final int CROP_SIZE = 2000; // max crop px
+    private AppBarLayout mAppBarLayout;
+    //    private CropImageView mCropImageView;
+    public UCropFragment fragment;
+    private Uri destinationUri;
+    private Album album;
 
     public static MediaSelectionFragment newInstance(Album album) {
         MediaSelectionFragment fragment = new MediaSelectionFragment();
@@ -83,13 +102,16 @@ public class MediaSelectionFragment extends Fragment implements
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        mRecyclerView = (RecyclerView) view.findViewById(R.id.recyclerview);
+        mRecyclerView = view.findViewById(R.id.recyclerview);
+        mAppBarLayout = view.findViewById(R.id.mAppBarContainer);
+//        mCropImageView = view.findViewById(R.id.mPreview);
+//        mCropImageView.setMaxCropResultSize(CROP_SIZE, CROP_SIZE);
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        Album album = getArguments().getParcelable(EXTRA_ALBUM);
+        album = getArguments().getParcelable(EXTRA_ALBUM);
 
         mAdapter = new AlbumMediaAdapter(getContext(),
                 mSelectionProvider.provideSelectedItemCollection(), mRecyclerView);
@@ -130,6 +152,8 @@ public class MediaSelectionFragment extends Fragment implements
     @Override
     public void onAlbumMediaLoad(Cursor cursor) {
         mAdapter.swapCursor(cursor);
+        cursor.moveToPosition(album.isAll() ? 1 : 0);
+        showPreviewImage(Item.valueOf(cursor).uri);
     }
 
     @Override
@@ -146,11 +170,59 @@ public class MediaSelectionFragment extends Fragment implements
     }
 
     @Override
-    public void onMediaClick(Album album, Item item, int adapterPosition) {
-        if (mOnMediaClickListener != null) {
-            mOnMediaClickListener.onMediaClick((Album) getArguments().getParcelable(EXTRA_ALBUM),
-                    item, adapterPosition);
+    public void onMediaClick(Album album, Item item, Item mPrevious, int adapterPosition) {
+        if (!item.equals(mPrevious)) {
+            cropCurrentImage(mPrevious);
         }
+
+        if (!item.equals(mPrevious))
+            showPreviewImage(item.uri);
+    }
+
+    public boolean onNextButtonClick() {
+        return cropCurrentImage(mAdapter.mPrevious);
+    }
+
+    private boolean cropCurrentImage(Item item) {
+        // crop and save Current image
+        SelectedItemCollection collection = mSelectionProvider.provideSelectedItemCollection();
+        int checkedNum = collection.checkedNumOf(item);
+        if (fragment != null && fragment.isAdded() && checkedNum != CheckView.UNCHECKED) {
+            fragment.cropAndSaveImage();
+            item.uriCrop = destinationUri;
+            Log.d("cropAndSaveImage: ", destinationUri.toString());
+            return false;
+        }
+        return true;
+    }
+
+
+    public void showPreviewImage(Uri uri) {
+        // load new image
+        String destinationFileName = String.format("%s.jpeg", Calendar.getInstance().getTimeInMillis());
+
+        destinationUri = Uri.fromFile(new File(new ContextWrapper(getContext()).getCacheDir(), destinationFileName));
+        UCrop uCrop = UCrop.of(uri, destinationUri);
+        uCrop = setupConfig(uCrop);
+
+        if (getActivity() == null) return;
+        fragment = uCrop.getFragment();
+        getActivity().getSupportFragmentManager().beginTransaction()
+                .add(R.id.mPreview, fragment, TAG)
+                .commitAllowingStateLoss();
+    }
+
+
+    private UCrop setupConfig(UCrop uCrop) {
+        UCrop.Options options = new UCrop.Options();
+        options.setCompressionFormat(Bitmap.CompressFormat.JPEG);
+        options.setCropFrameStrokeWidth(5);
+        options.setCompressionQuality(70);
+        options.setHideBottomControls(true);
+
+        uCrop = uCrop.withAspectRatio(1, 1);
+        uCrop = uCrop.withMaxResultSize(CROP_SIZE, CROP_SIZE);
+        return uCrop.withOptions(options);
     }
 
     public interface SelectionProvider {

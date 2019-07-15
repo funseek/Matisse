@@ -145,7 +145,7 @@ public class SelectedItemCollection {
     public List<Uri> asListOfUri() {
         List<Uri> uris = new ArrayList<>();
         for (Item item : mItems) {
-            uris.add(item.getContentUri());
+            uris.add(item.uriCrop);
         }
         return uris;
     }

@@ -19,7 +19,6 @@ apply plugin: 'checkstyle'
 
 android {
     compileSdkVersion 27
-    buildToolsVersion '27.0.3'
 
     defaultConfig {
         minSdkVersion 14
@@ -44,6 +43,8 @@ dependencies {
     implementation "com.android.support:support-annotations:${supportLibVersion}"
     implementation "com.android.support:recyclerview-v7:${supportLibVersion}"
     implementation 'it.sephiroth.android.library.imagezoom:library:1.0.4'
+    implementation 'com.github.yalantis:ucrop:2.2.3-native'
+    implementation 'com.android.support:design:${supportLibVersion}'
 
     compileOnly 'com.github.bumptech.glide:glide:3.7.0'
     compileOnly 'com.squareup.picasso:picasso:2.5.2'

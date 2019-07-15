@@ -16,6 +16,8 @@
 package com.zhihu.matisse.ui;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.TypedArray;
 import android.database.Cursor;
@@ -26,24 +28,29 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.yalantis.ucrop.UCrop;
+import com.yalantis.ucrop.UCropFragment;
+import com.yalantis.ucrop.UCropFragmentCallback;
 import com.zhihu.matisse.R;
 import com.zhihu.matisse.internal.entity.Album;
 import com.zhihu.matisse.internal.entity.Item;
 import com.zhihu.matisse.internal.entity.SelectionSpec;
 import com.zhihu.matisse.internal.model.AlbumCollection;
 import com.zhihu.matisse.internal.model.SelectedItemCollection;
-import com.zhihu.matisse.internal.ui.AlbumPreviewActivity;
 import com.zhihu.matisse.internal.ui.BasePreviewActivity;
 import com.zhihu.matisse.internal.ui.MediaSelectionFragment;
 import com.zhihu.matisse.internal.ui.SelectedPreviewActivity;
@@ -56,13 +63,14 @@ import com.zhihu.matisse.internal.utils.MediaStoreCompat;
 import com.zhihu.matisse.internal.utils.PathUtils;
 import com.zhihu.matisse.internal.utils.PhotoMetadataUtils;
 
+import java.io.File;
 import java.util.ArrayList;
 
 /**
  * Main Activity to display albums and media content (images/videos) in each album
  * and also support media selecting operations.
  */
-public class MatisseActivity extends AppCompatActivity implements
+public class MatisseActivity extends AppCompatActivity implements UCropFragmentCallback,
         AlbumCollection.AlbumCallbacks, AdapterView.OnItemSelectedListener,
         MediaSelectionFragment.SelectionProvider, View.OnClickListener,
         AlbumMediaAdapter.CheckStateListener, AlbumMediaAdapter.OnMediaClickListener,
@@ -89,6 +97,8 @@ public class MatisseActivity extends AppCompatActivity implements
     private LinearLayout mOriginalLayout;
     private CheckRadioView mOriginal;
     private boolean mOriginalEnable;
+    private ProgressDialog mProgressDialog;
+    private boolean clickNextButton = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -184,6 +194,63 @@ public class MatisseActivity extends AppCompatActivity implements
     }
 
     @Override
+    public void loadingProgress(boolean showLoader) {
+        if (showLoader) showProgress();
+        else hideProgress();
+    }
+
+    @Override
+    public void onCropFinish(UCropFragment.UCropResult result) {
+        switch (result.mResultCode) {
+            case RESULT_OK:
+                handleCropResult(result.mResultData);
+                break;
+            case UCrop.RESULT_ERROR:
+                handleCropError(result.mResultData);
+                break;
+        }
+
+        if (clickNextButton) {
+            setResultOK();
+        }
+        hideProgress();
+    }
+
+    private void setResultOK() {
+        Intent intent = new Intent();
+        ArrayList<Uri> selectedUris = (ArrayList<Uri>) mSelectedCollection.asListOfUri();
+        intent.putParcelableArrayListExtra(EXTRA_RESULT_SELECTION, selectedUris);
+        setResult(RESULT_OK, intent);
+        finish();
+    }
+
+    public void showProgress() {
+        hideProgress();
+        mProgressDialog = ProgressDialog.show(this, null, "Please wait...");
+    }
+
+    public void hideProgress() {
+        if (mProgressDialog != null) {
+            mProgressDialog.dismiss();
+            mProgressDialog = null;
+        }
+    }
+
+    private void handleCropResult(@NonNull Intent result) {
+        final Uri resultUri = UCrop.getOutput(result);
+        if (resultUri != null) {
+            // do smt with resultUri
+        } else {
+            Toast.makeText(this, "Cannot retrieve cropped image", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void handleCropError(@NonNull Intent result) {
+        final Throwable cropError = UCrop.getError(result);
+        Log.e("TNS", "handleCropError: ", cropError);
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode != RESULT_OK)
@@ -234,8 +301,24 @@ public class MatisseActivity extends AppCompatActivity implements
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
                 MatisseActivity.this.revokeUriPermission(contentUri,
                         Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            finish();
+            galleryAddPic(getApplicationContext());
+            Handler handler = new Handler(Looper.getMainLooper());
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    onAlbumSelected(Album.valueOf(mAlbumsAdapter.getCursor()));
+                }
+            }, 400);
         }
+    }
+
+    private void galleryAddPic(Context context) {
+        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        File f = new File(mMediaStoreCompat.getCurrentPhotoPath());
+        Uri contentUri = Uri.fromFile(f);
+        mediaScanIntent.setData(contentUri);
+        context.sendBroadcast(mediaScanIntent);
+        Log.d(this + "", "galleryAddPic : " + contentUri);
     }
 
     private void updateBottomToolbar() {
@@ -308,14 +391,14 @@ public class MatisseActivity extends AppCompatActivity implements
             intent.putExtra(BasePreviewActivity.EXTRA_RESULT_ORIGINAL_ENABLE, mOriginalEnable);
             startActivityForResult(intent, REQUEST_CODE_PREVIEW);
         } else if (v.getId() == R.id.button_apply) {
-            Intent result = new Intent();
-            ArrayList<Uri> selectedUris = (ArrayList<Uri>) mSelectedCollection.asListOfUri();
-            result.putParcelableArrayListExtra(EXTRA_RESULT_SELECTION, selectedUris);
-            ArrayList<String> selectedPaths = (ArrayList<String>) mSelectedCollection.asListOfString();
-            result.putStringArrayListExtra(EXTRA_RESULT_SELECTION_PATH, selectedPaths);
-            result.putExtra(EXTRA_RESULT_ORIGINAL_ENABLE, mOriginalEnable);
-            setResult(RESULT_OK, result);
-            finish();
+            clickNextButton = true;
+            Fragment mediaSelectionFragment = getSupportFragmentManager().findFragmentByTag(
+                    MediaSelectionFragment.class.getSimpleName());
+            if (mediaSelectionFragment instanceof MediaSelectionFragment) {
+                if (((MediaSelectionFragment) mediaSelectionFragment).onNextButtonClick()) {
+                    setResultOK();
+                }
+            }
         } else if (v.getId() == R.id.originalLayout) {
             int count = countOverMaxSize();
             if (count > 0) {
@@ -339,11 +422,7 @@ public class MatisseActivity extends AppCompatActivity implements
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         mAlbumCollection.setStateCurrentSelection(position);
         mAlbumsAdapter.getCursor().moveToPosition(position);
-        Album album = Album.valueOf(mAlbumsAdapter.getCursor());
-        if (album.isAll() && SelectionSpec.getInstance().capture) {
-            album.addCaptureCount();
-        }
-        onAlbumSelected(album);
+        onAlbumSelected(Album.valueOf(mAlbumsAdapter.getCursor()));
     }
 
     @Override
@@ -363,11 +442,7 @@ public class MatisseActivity extends AppCompatActivity implements
                 cursor.moveToPosition(mAlbumCollection.getCurrentSelection());
                 mAlbumsSpinner.setSelection(MatisseActivity.this,
                         mAlbumCollection.getCurrentSelection());
-                Album album = Album.valueOf(cursor);
-                if (album.isAll() && SelectionSpec.getInstance().capture) {
-                    album.addCaptureCount();
-                }
-                onAlbumSelected(album);
+                onAlbumSelected(Album.valueOf(cursor));
             }
         });
     }
@@ -378,6 +453,10 @@ public class MatisseActivity extends AppCompatActivity implements
     }
 
     private void onAlbumSelected(Album album) {
+        Log.d(this + "", "onAlbumSelected: " + album.getDisplayName(this));
+        if (album.isAll() && SelectionSpec.getInstance().capture) {
+            album.addCaptureCount();
+        }
         if (album.isAll() && album.isEmpty()) {
             mContainer.setVisibility(View.GONE);
             mEmptyView.setVisibility(View.VISIBLE);
@@ -404,13 +483,13 @@ public class MatisseActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onMediaClick(Album album, Item item, int adapterPosition) {
-        Intent intent = new Intent(this, AlbumPreviewActivity.class);
-        intent.putExtra(AlbumPreviewActivity.EXTRA_ALBUM, album);
-        intent.putExtra(AlbumPreviewActivity.EXTRA_ITEM, item);
-        intent.putExtra(BasePreviewActivity.EXTRA_DEFAULT_BUNDLE, mSelectedCollection.getDataWithBundle());
-        intent.putExtra(BasePreviewActivity.EXTRA_RESULT_ORIGINAL_ENABLE, mOriginalEnable);
-        startActivityForResult(intent, REQUEST_CODE_PREVIEW);
+    public void onMediaClick(Album album, Item item, Item mPrevious, int adapterPosition) {
+//        Intent intent = new Intent(this, AlbumPreviewActivity.class);
+//        intent.putExtra(AlbumPreviewActivity.EXTRA_ALBUM, album);
+//        intent.putExtra(AlbumPreviewActivity.EXTRA_ITEM, item);
+//        intent.putExtra(BasePreviewActivity.EXTRA_DEFAULT_BUNDLE, mSelectedCollection.getDataWithBundle());
+//        intent.putExtra(BasePreviewActivity.EXTRA_RESULT_ORIGINAL_ENABLE, mOriginalEnable);
+        //startActivityForResult(intent, REQUEST_CODE_PREVIEW);
     }
 
     @Override
