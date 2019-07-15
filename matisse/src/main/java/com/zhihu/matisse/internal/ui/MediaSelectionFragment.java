@@ -67,6 +67,7 @@ public class MediaSelectionFragment extends Fragment implements
     public UCropFragment fragment;
     private Uri destinationUri;
     private Album album;
+    private boolean isFirst = true;
 
     public static MediaSelectionFragment newInstance(Album album) {
         MediaSelectionFragment fragment = new MediaSelectionFragment();
@@ -152,8 +153,11 @@ public class MediaSelectionFragment extends Fragment implements
     @Override
     public void onAlbumMediaLoad(Cursor cursor) {
         mAdapter.swapCursor(cursor);
-        cursor.moveToPosition(album.isAll() ? 1 : 0);
-        showPreviewImage(Item.valueOf(cursor).uri);
+        if (isFirst) {
+            isFirst = false;
+            cursor.moveToPosition(album.isAll() ? 1 : 0);
+            showPreviewImage(Item.valueOf(cursor).uri);
+        }
     }
 
     @Override

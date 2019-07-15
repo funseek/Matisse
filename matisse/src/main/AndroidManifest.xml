@@ -22,6 +22,7 @@
 
     <application>
         <activity android:name="com.zhihu.matisse.ui.MatisseActivity"/>
+        <activity android:name="com.zhihu.matisse.ui.FilterActivity"/>
         <activity android:name="com.zhihu.matisse.internal.ui.AlbumPreviewActivity"/>
         <activity android:name="com.zhihu.matisse.internal.ui.SelectedPreviewActivity"/>
     </application>

@@ -81,6 +81,7 @@ public class MatisseActivity extends AppCompatActivity implements UCropFragmentC
     public static final String EXTRA_RESULT_ORIGINAL_ENABLE = "extra_result_original_enable";
     private static final int REQUEST_CODE_PREVIEW = 23;
     private static final int REQUEST_CODE_CAPTURE = 24;
+    private static final int REQUEST_CODE_FILTER = 25;
     public static final String CHECK_STATE = "checkState";
     private final AlbumCollection mAlbumCollection = new AlbumCollection();
     private MediaStoreCompat mMediaStoreCompat;
@@ -211,17 +212,17 @@ public class MatisseActivity extends AppCompatActivity implements UCropFragmentC
         }
 
         if (clickNextButton) {
-            setResultOK();
+            clickNextButton = false;
+            startFilterActivity();
         }
         hideProgress();
     }
 
-    private void setResultOK() {
-        Intent intent = new Intent();
+    private void startFilterActivity() {
+        Intent intent = new Intent(this, FilterActivity.class);
         ArrayList<Uri> selectedUris = (ArrayList<Uri>) mSelectedCollection.asListOfUri();
         intent.putParcelableArrayListExtra(EXTRA_RESULT_SELECTION, selectedUris);
-        setResult(RESULT_OK, intent);
-        finish();
+        startActivityForResult(intent, REQUEST_CODE_FILTER);
     }
 
     public void showProgress() {
@@ -309,6 +310,15 @@ public class MatisseActivity extends AppCompatActivity implements UCropFragmentC
                     onAlbumSelected(Album.valueOf(mAlbumsAdapter.getCursor()));
                 }
             }, 400);
+        } else if (requestCode == REQUEST_CODE_FILTER) {
+            Intent intent = new Intent();
+            ArrayList<Uri> selectedUris = (ArrayList<Uri>) mSelectedCollection.asListOfUri();
+            intent.putParcelableArrayListExtra(EXTRA_RESULT_SELECTION, selectedUris);
+            ArrayList<String> selectedPaths = (ArrayList<String>) mSelectedCollection.asListOfString();
+            intent.putStringArrayListExtra(EXTRA_RESULT_SELECTION_PATH, selectedPaths);
+            intent.putExtra(EXTRA_RESULT_ORIGINAL_ENABLE, mOriginalEnable);
+            setResult(RESULT_OK, intent);
+            finish();
         }
     }
 
@@ -396,7 +406,7 @@ public class MatisseActivity extends AppCompatActivity implements UCropFragmentC
                     MediaSelectionFragment.class.getSimpleName());
             if (mediaSelectionFragment instanceof MediaSelectionFragment) {
                 if (((MediaSelectionFragment) mediaSelectionFragment).onNextButtonClick()) {
-                    setResultOK();
+                    startFilterActivity();
                 }
             }
         } else if (v.getId() == R.id.originalLayout) {

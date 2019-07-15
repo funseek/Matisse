@@ -16,12 +16,14 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.novoda.bintray-release'
 apply plugin: 'checkstyle'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion 28
 
     defaultConfig {
-        minSdkVersion 14
+        minSdkVersion 21
         targetSdkVersion 28
     }
     compileOptions {
@@ -44,9 +46,8 @@ dependencies {
     implementation "com.android.support:recyclerview-v7:${supportLibVersion}"
     implementation 'it.sephiroth.android.library.imagezoom:library:1.0.4'
     implementation 'com.github.yalantis:ucrop:2.2.3-native'
-    implementation 'com.android.support:design:${supportLibVersion}'
-
-    compileOnly 'com.github.bumptech.glide:glide:3.7.0'
+    implementation 'info.androidhive:imagefilters:1.0.7'
+    implementation 'com.github.bumptech.glide:glide:4.9.0'
     compileOnly 'com.squareup.picasso:picasso:2.5.2'
 }
 
@@ -74,7 +75,7 @@ tasks.withType(Javadoc) {
     options.addStringOption('encoding', 'UTF-8')
 }
 
-task checkstyle(type:Checkstyle) {
+task checkstyle(type: Checkstyle) {
     description 'Runs Checkstyle inspection against matisse sourcesets.'
     group = 'Code Quality'
     configFile rootProject.file('checkstyle.xml')
