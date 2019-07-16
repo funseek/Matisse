@@ -24,7 +24,6 @@ import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 import com.zhihu.matisse.Matisse
 import com.zhihu.matisse.R
-import com.zhihu.matisse.internal.entity.SelectionSpec
 import com.zomato.photofilters.FilterPack
 import com.zomato.photofilters.imageprocessors.Filter
 import com.zomato.photofilters.utils.ThumbnailCallback
@@ -36,7 +35,7 @@ import kotlinx.android.synthetic.main.filter_images.view.*
 class FilterActivity : AppCompatActivity(), ThumbnailCallback, OnViewPagerImageLoad {
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        setTheme(SelectionSpec.getInstance().themeId)
+        setTheme(R.style.Matisse_Zhihu)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_post_filter)
 
