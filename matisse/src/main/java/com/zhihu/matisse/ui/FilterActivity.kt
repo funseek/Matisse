@@ -33,7 +33,6 @@ import kotlinx.android.synthetic.main.activity_post_filter.*
 import kotlinx.android.synthetic.main.filter_images.view.*
 
 class FilterActivity : AppCompatActivity(), ThumbnailCallback, OnViewPagerImageLoad {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(R.style.Matisse_Zhihu)
         super.onCreate(savedInstanceState)
@@ -67,6 +66,7 @@ class FilterActivity : AppCompatActivity(), ThumbnailCallback, OnViewPagerImageL
     private fun initViewPager(mSelected: MutableList<Uri>) {
         val adapter = FilterImageAdapter(this, mSelected, this)
         viewPager.adapter = adapter
+        viewPager.offscreenPageLimit = adapter.count
         viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
             override fun onPageScrollStateChanged(p0: Int) {
             }
@@ -76,7 +76,7 @@ class FilterActivity : AppCompatActivity(), ThumbnailCallback, OnViewPagerImageL
 
             override fun onPageSelected(p0: Int) {
                 Log.v("FilterActivity", "onPageSelected $p0")
-                bindDataToAdapter(adapter.bitmaps[p0])
+                bindDataToAdapter(p0)
             }
         })
     }
@@ -89,12 +89,16 @@ class FilterActivity : AppCompatActivity(), ThumbnailCallback, OnViewPagerImageL
         thumbnails_view.setHasFixedSize(true)
     }
 
-    override fun onImageLoad(resource: Bitmap?) {
-        bindDataToAdapter(resource)
+    override fun onImageLoad(p: Int) {
+        bindDataToAdapter(p)
     }
 
-    private fun bindDataToAdapter(resource: Bitmap?) {
+    private fun bindDataToAdapter(p: Int) {
+        if (viewPager.currentItem != p) return
+
         val size = resources.getDimension(R.dimen.thumbnail_size)
+        val resource = (viewPager.adapter as FilterImageAdapter).bitmaps[viewPager.currentItem]
+                ?: return
         val resizeBm = Bitmap.createScaledBitmap(resource, size.toInt(), size.toInt(), false)
         ThumbnailsManager.clearThumbs()
 
@@ -110,8 +114,8 @@ class FilterActivity : AppCompatActivity(), ThumbnailCallback, OnViewPagerImageL
 
     override fun onThumbnailClick(filter: Filter) {
         val bm = (viewPager.adapter as FilterImageAdapter).bitmaps[viewPager.currentItem]
-        viewPager.getChildAt(viewPager.currentItem).findViewById<ImageView>(R.id.imageView)
-                .setImageBitmap(filter.processFilter(bm))
+        viewPager.getChildAt(viewPager.currentItem)?.findViewById<ImageView>(R.id.imageView)
+                ?.setImageBitmap(filter.processFilter(bm))
     }
 
     companion object {
@@ -120,8 +124,8 @@ class FilterActivity : AppCompatActivity(), ThumbnailCallback, OnViewPagerImageL
         }
     }
 
-    class FilterImageAdapter(private val context: Context, private val images: List<Uri>, private val listener: OnViewPagerImageLoad) : PagerAdapter() {
-
+    class FilterImageAdapter(private val context: Context, private val images: List<Uri>,
+                             private val listener: OnViewPagerImageLoad) : PagerAdapter() {
         var bitmaps: LinkedHashMap<Int, Bitmap?> = LinkedHashMap()
         override fun isViewFromObject(view: View, `object`: Any): Boolean {
             return view == `object`
@@ -145,7 +149,7 @@ class FilterActivity : AppCompatActivity(), ThumbnailCallback, OnViewPagerImageL
                                              dataSource: DataSource?, isFirstResource: Boolean): Boolean {
                     view.imageView.setImageBitmap(resource)
                     bitmaps[position] = resource
-                    listener.onImageLoad(bitmaps[position])
+                    listener.onImageLoad(position)
                     return true
                 }
 
@@ -161,6 +165,6 @@ class FilterActivity : AppCompatActivity(), ThumbnailCallback, OnViewPagerImageL
 }
 
 interface OnViewPagerImageLoad {
-    fun onImageLoad(resource: Bitmap?)
+    fun onImageLoad(p: Int)
 }
 
