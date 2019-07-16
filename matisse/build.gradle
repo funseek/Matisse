@@ -58,18 +58,17 @@ publish {
     website = 'https://www.zhihu.com/'
 }
 
-//task javadoc(type: Javadoc) {
-//    options.encoding = "utf-8"
-//}
+task javadoc(type: Javadoc) {
+    options.encoding = "utf-8"
+}
 
 //checkstyle {
 //    toolVersion = '7.6.1'
 //}
 
-//tasks.withType(Javadoc) {
-//    options.addStringOption('Xdoclint:none', '-quiet')
-//    options.addStringOption('encoding', 'UTF-8')
-//}
+tasks.withType(Javadoc).all {
+    enabled = false
+}
 
 //task checkstyle(type: Checkstyle) {
 //    description 'Runs Checkstyle inspection against matisse sourcesets.'
