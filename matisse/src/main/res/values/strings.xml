@@ -39,6 +39,8 @@
     <string name="button_original">Original</string>
     <string name="button_sure_default">Next</string>
     <string name="button_sure">Next(%1$d)</string>
+    <string name="title_filter">Filter</string>
+    <string name="next">Next</string>
 
     <string name="appbar_scrolling_view_behavior" translatable="false">android.support.design.widget.AppBarLayout$ScrollingViewBehavior</string>
 </resources>
