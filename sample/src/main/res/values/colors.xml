@@ -16,6 +16,4 @@
   -->
 <resources>
     <color name="list_bg">#3B3B3B</color>
-    <color name="thumb_background_color">#FFF</color>
-    <color name="colorBlueLink">#0645AD</color>
 </resources>
