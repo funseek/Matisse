@@ -157,8 +157,8 @@ public class MediaSelectionFragment extends Fragment implements
             isFirst = false;
             cursor.moveToPosition(album.isAll() ? 1 : 0);
             showPreviewImage(Item.valueOf(cursor).uri);
-            SelectedItemCollection collection = mSelectionProvider.provideSelectedItemCollection();
-            if (collection.isEmpty()) collection.add(Item.valueOf(cursor));
+//            SelectedItemCollection collection = mSelectionProvider.provideSelectedItemCollection();
+//            if (collection.isEmpty()) collection.add(Item.valueOf(cursor));
         }
     }
 
