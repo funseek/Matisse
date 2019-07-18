@@ -22,7 +22,6 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.design.widget.AppBarLayout;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -61,9 +60,6 @@ public class MediaSelectionFragment extends Fragment implements
     private SelectionProvider mSelectionProvider;
     private AlbumMediaAdapter.CheckStateListener mCheckStateListener;
     private AlbumMediaAdapter.OnMediaClickListener mOnMediaClickListener;
-    private static final int CROP_SIZE = 2000; // max crop px
-    private AppBarLayout mAppBarLayout;
-    //    private CropImageView mCropImageView;
     public UCropFragment fragment;
     private Uri destinationUri;
     private Album album;
@@ -104,9 +100,6 @@ public class MediaSelectionFragment extends Fragment implements
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         mRecyclerView = view.findViewById(R.id.recyclerview);
-        mAppBarLayout = view.findViewById(R.id.mAppBarContainer);
-//        mCropImageView = view.findViewById(R.id.mPreview);
-//        mCropImageView.setMaxCropResultSize(CROP_SIZE, CROP_SIZE);
     }
 
     @Override
@@ -227,7 +220,8 @@ public class MediaSelectionFragment extends Fragment implements
         options.setHideBottomControls(true);
 
         uCrop = uCrop.withAspectRatio(1, 1);
-        uCrop = uCrop.withMaxResultSize(CROP_SIZE, CROP_SIZE);
+        uCrop = uCrop.withMaxResultSize(SelectionSpec.getInstance().cropMaxSize,
+                SelectionSpec.getInstance().cropMaxSize);
         return uCrop.withOptions(options);
     }
 

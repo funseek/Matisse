@@ -236,6 +236,17 @@ public final class SelectionCreator {
     }
 
     /**
+     * Maximum crop size ,the unit is px.
+     *
+     * @param size Maximum original size. Default value is 2000
+     * @return {@link SelectionCreator} for fluent API.
+     */
+    public SelectionCreator maxCropSize(int size) {
+        mSelectionSpec.cropMaxSize = size;
+        return this;
+    }
+
+    /**
      * Capture strategy provided for the location to save photos including internal and external
      * storage and also a authority for {@link android.support.v4.content.FileProvider}.
      *
