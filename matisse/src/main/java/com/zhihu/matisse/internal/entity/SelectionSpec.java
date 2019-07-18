@@ -91,7 +91,7 @@ public final class SelectionSpec {
         originalable = false;
         autoHideToobar = false;
         originalMaxSize = Integer.MAX_VALUE;
-        cropMaxSize = 2000;
+        cropMaxSize = 4000;
     }
 
     public boolean singleSelectionModeEnabled() {
