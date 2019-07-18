@@ -59,7 +59,7 @@ public class MediaGrid extends SquareFrameLayout implements View.OnClickListener
         mVideoDuration = (TextView) findViewById(R.id.video_duration);
 
         mThumbnail.setOnClickListener(this);
-        mCheckView.setOnClickListener(this);
+//        mCheckView.setOnClickListener(this);
     }
 
     @Override
@@ -68,7 +68,7 @@ public class MediaGrid extends SquareFrameLayout implements View.OnClickListener
             if (v == mThumbnail) {
                 mListener.onThumbnailClicked(mThumbnail, mMedia, mPreBindInfo.mViewHolder);
             } else if (v == mCheckView) {
-                mListener.onCheckViewClicked(mCheckView, mMedia, mPreBindInfo.mViewHolder);
+//                mListener.onCheckViewClicked(mCheckView, mMedia, mPreBindInfo.mViewHolder);
             }
         }
     }

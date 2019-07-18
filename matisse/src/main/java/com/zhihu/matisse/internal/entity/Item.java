@@ -44,6 +44,7 @@ public class Item implements Parcelable {
     public final long id;
     public final String mimeType;
     public final Uri uri;
+    public Uri uriCrop;
     public final long size;
     public final long duration; // only for video, in ms
 
@@ -60,6 +61,7 @@ public class Item implements Parcelable {
             contentUri = MediaStore.Files.getContentUri("external");
         }
         this.uri = ContentUris.withAppendedId(contentUri, id);
+        this.uriCrop = null;
         this.size = size;
         this.duration = duration;
     }
@@ -70,6 +72,7 @@ public class Item implements Parcelable {
         uri = source.readParcelable(Uri.class.getClassLoader());
         size = source.readLong();
         duration = source.readLong();
+        uriCrop = source.readParcelable(Uri.class.getClassLoader());
     }
 
     public static Item valueOf(Cursor cursor) {
@@ -89,6 +92,7 @@ public class Item implements Parcelable {
         dest.writeLong(id);
         dest.writeString(mimeType);
         dest.writeParcelable(uri, 0);
+        dest.writeParcelable(uriCrop, 0);
         dest.writeLong(size);
         dest.writeLong(duration);
     }
@@ -122,9 +126,9 @@ public class Item implements Parcelable {
         Item other = (Item) obj;
         return id == other.id
                 && (mimeType != null && mimeType.equals(other.mimeType)
-                    || (mimeType == null && other.mimeType == null))
+                || (mimeType == null && other.mimeType == null))
                 && (uri != null && uri.equals(other.uri)
-                    || (uri == null && other.uri == null))
+                || (uri == null && other.uri == null))
                 && size == other.size
                 && duration == other.duration;
     }

@@ -16,25 +16,22 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.novoda.bintray-release'
 apply plugin: 'checkstyle'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 27
-    buildToolsVersion '27.0.3'
+    compileSdkVersion 28
 
     defaultConfig {
-        minSdkVersion 14
-        targetSdkVersion 27
-    }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
+        minSdkVersion 21
+        targetSdkVersion 28
     }
     lintOptions {
-        abortOnError false
+        abortOnError true
     }
 }
 
-ext.supportLibVersion = '27.1.1'
+ext.supportLibVersion = '28.0.0'
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
@@ -44,8 +41,9 @@ dependencies {
     implementation "com.android.support:support-annotations:${supportLibVersion}"
     implementation "com.android.support:recyclerview-v7:${supportLibVersion}"
     implementation 'it.sephiroth.android.library.imagezoom:library:1.0.4'
-
-    compileOnly 'com.github.bumptech.glide:glide:3.7.0'
+    implementation 'com.github.yalantis:ucrop:2.2.3-native'
+    implementation 'info.androidhive:imagefilters:1.0.7'
+    implementation 'com.github.bumptech.glide:glide:4.9.0'
     compileOnly 'com.squareup.picasso:picasso:2.5.2'
 }
 
@@ -55,7 +53,7 @@ publish {
     userOrg = 'zhihu'
     groupId = 'com.zhihu.android'
     artifactId = 'matisse'
-    publishVersion = '0.5.2-beta4'
+    publishVersion = '0.1'
     desc = 'A well-designed local image selector for Android'
     website = 'https://www.zhihu.com/'
 }
@@ -64,21 +62,20 @@ task javadoc(type: Javadoc) {
     options.encoding = "utf-8"
 }
 
-checkstyle {
-    toolVersion = '7.6.1'
+//checkstyle {
+//    toolVersion = '7.6.1'
+//}
+
+tasks.withType(Javadoc).all {
+    enabled = false
 }
 
-tasks.withType(Javadoc) {
-    options.addStringOption('Xdoclint:none', '-quiet')
-    options.addStringOption('encoding', 'UTF-8')
-}
-
-task checkstyle(type:Checkstyle) {
-    description 'Runs Checkstyle inspection against matisse sourcesets.'
-    group = 'Code Quality'
-    configFile rootProject.file('checkstyle.xml')
-    ignoreFailures = false
-    showViolations true
-    classpath = files()
-    source 'src/main/java'
-}
+//task checkstyle(type: Checkstyle) {
+//    description 'Runs Checkstyle inspection against matisse sourcesets.'
+//    group = 'Code Quality'
+//    configFile rootProject.file('checkstyle.xml')
+//    ignoreFailures = true
+//    showViolations true
+//    classpath = files()
+//    source 'src/main/java'
+//}

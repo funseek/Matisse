@@ -30,9 +30,9 @@ import android.widget.TextView;
 
 import com.zhihu.matisse.R;
 import com.zhihu.matisse.internal.entity.Album;
+import com.zhihu.matisse.internal.entity.IncapableCause;
 import com.zhihu.matisse.internal.entity.Item;
 import com.zhihu.matisse.internal.entity.SelectionSpec;
-import com.zhihu.matisse.internal.entity.IncapableCause;
 import com.zhihu.matisse.internal.model.SelectedItemCollection;
 import com.zhihu.matisse.internal.ui.widget.CheckView;
 import com.zhihu.matisse.internal.ui.widget.MediaGrid;
@@ -50,6 +50,7 @@ public class AlbumMediaAdapter extends
     private OnMediaClickListener mOnMediaClickListener;
     private RecyclerView mRecyclerView;
     private int mImageResize;
+    public Item mPrevious = null;
 
     public AlbumMediaAdapter(Context context, SelectedItemCollection selectedCollection, RecyclerView recyclerView) {
         super(null);
@@ -160,7 +161,18 @@ public class AlbumMediaAdapter extends
     @Override
     public void onThumbnailClicked(ImageView thumbnail, Item item, RecyclerView.ViewHolder holder) {
         if (mOnMediaClickListener != null) {
-            mOnMediaClickListener.onMediaClick(null, item, holder.getAdapterPosition());
+            int checkedNum = mSelectedCollection.checkedNumOf(item);
+            if (checkedNum == CheckView.UNCHECKED) {
+                if (assertAddSelection(holder.itemView.getContext(), item)) {
+                    mSelectedCollection.add(item);
+                    mOnMediaClickListener.onMediaClick(null, item, mPrevious, holder.getAdapterPosition());
+                }
+            } else {
+                mSelectedCollection.remove(item);
+            }
+            notifyCheckStateChanged();
+
+            mPrevious = item;
         }
     }
 
@@ -261,7 +273,7 @@ public class AlbumMediaAdapter extends
     }
 
     public interface OnMediaClickListener {
-        void onMediaClick(Album album, Item item, int adapterPosition);
+        void onMediaClick(Album album, Item item, Item mPrevious, int adapterPosition);
     }
 
     public interface OnPhotoCapture {
