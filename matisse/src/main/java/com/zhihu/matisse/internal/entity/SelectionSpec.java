@@ -55,6 +55,7 @@ public final class SelectionSpec {
     public boolean autoHideToobar;
     public int originalMaxSize;
     public int cropMaxSize;
+    public boolean hasFilter;
     public OnCheckedListener onCheckedListener;
 
     private SelectionSpec() {
@@ -92,6 +93,7 @@ public final class SelectionSpec {
         autoHideToobar = false;
         originalMaxSize = Integer.MAX_VALUE;
         cropMaxSize = 4000;
+        hasFilter = true;
     }
 
     public boolean singleSelectionModeEnabled() {
