@@ -247,6 +247,17 @@ public final class SelectionCreator {
     }
 
     /**
+     * Enable/disable the filter.
+     *
+     * @param enable is enable. Default value is true
+     * @return {@link SelectionCreator} for fluent API.
+     */
+    public SelectionCreator filterEnable(boolean enable) {
+        mSelectionSpec.hasFilter = enable;
+        return this;
+    }
+
+    /**
      * Capture strategy provided for the location to save photos including internal and external
      * storage and also a authority for {@link android.support.v4.content.FileProvider}.
      *

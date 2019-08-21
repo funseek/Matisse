@@ -213,9 +213,21 @@ public class MatisseActivity extends AppCompatActivity implements UCropFragmentC
 
         if (clickNextButton) {
             clickNextButton = false;
-            startFilterActivity();
+            if (mSpec.hasFilter) startFilterActivity();
+            else returnResult();
         }
         hideProgress();
+    }
+
+    private void returnResult() {
+        Intent intent = new Intent();
+        ArrayList<Uri> selectedUris = (ArrayList<Uri>) mSelectedCollection.asListOfUri();
+        intent.putParcelableArrayListExtra(EXTRA_RESULT_SELECTION, selectedUris);
+        ArrayList<String> selectedPaths = (ArrayList<String>) mSelectedCollection.asListOfString();
+        intent.putStringArrayListExtra(EXTRA_RESULT_SELECTION_PATH, selectedPaths);
+        intent.putExtra(EXTRA_RESULT_ORIGINAL_ENABLE, mOriginalEnable);
+        setResult(RESULT_OK, intent);
+        finish();
     }
 
     private void startFilterActivity() {
@@ -311,14 +323,7 @@ public class MatisseActivity extends AppCompatActivity implements UCropFragmentC
                 }
             }, 400);
         } else if (requestCode == REQUEST_CODE_FILTER) {
-            Intent intent = new Intent();
-            ArrayList<Uri> selectedUris = (ArrayList<Uri>) mSelectedCollection.asListOfUri();
-            intent.putParcelableArrayListExtra(EXTRA_RESULT_SELECTION, selectedUris);
-            ArrayList<String> selectedPaths = (ArrayList<String>) mSelectedCollection.asListOfString();
-            intent.putStringArrayListExtra(EXTRA_RESULT_SELECTION_PATH, selectedPaths);
-            intent.putExtra(EXTRA_RESULT_ORIGINAL_ENABLE, mOriginalEnable);
-            setResult(RESULT_OK, intent);
-            finish();
+            returnResult();
         }
     }
 
@@ -406,7 +411,8 @@ public class MatisseActivity extends AppCompatActivity implements UCropFragmentC
                     MediaSelectionFragment.class.getSimpleName());
             if (mediaSelectionFragment instanceof MediaSelectionFragment) {
                 if (((MediaSelectionFragment) mediaSelectionFragment).onNextButtonClick()) {
-                    startFilterActivity();
+                    if (mSpec.hasFilter) startFilterActivity();
+                    else returnResult();
                 }
             }
         } else if (v.getId() == R.id.originalLayout) {
