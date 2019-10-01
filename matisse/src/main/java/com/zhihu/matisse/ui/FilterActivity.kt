@@ -1,9 +1,7 @@
 package com.zhihu.matisse.ui
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
@@ -31,6 +29,10 @@ import com.zomato.photofilters.utils.ThumbnailItem
 import com.zomato.photofilters.utils.ThumbnailsManager
 import kotlinx.android.synthetic.main.activity_post_filter.*
 import kotlinx.android.synthetic.main.filter_images.view.*
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.OutputStream
 
 class FilterActivity : AppCompatActivity(), ThumbnailCallback, OnViewPagerImageLoad {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,13 +43,11 @@ class FilterActivity : AppCompatActivity(), ThumbnailCallback, OnViewPagerImageL
         setSupportActionBar(toolbar)
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         next.setOnClickListener {
-            val intent = Intent()
-            setResult(Activity.RESULT_OK, intent)
+            setResult(Activity.RESULT_OK)
             finish()
         }
 
-        val mSelected = Matisse.obtainResult(intent)
-        initUIWidgets(mSelected)
+        initUIWidgets(Matisse.obtainResult(intent))
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
@@ -113,9 +113,27 @@ class FilterActivity : AppCompatActivity(), ThumbnailCallback, OnViewPagerImageL
     }
 
     override fun onThumbnailClick(filter: Filter) {
-        val bm = (viewPager.adapter as FilterImageAdapter).bitmaps[viewPager.currentItem]
+        val bm = (viewPager.adapter as FilterImageAdapter).bitmaps[viewPager.currentItem]!!
+        val bm2 = bm.copy(bm.config, true)
         viewPager.getChildAt(viewPager.currentItem)?.findViewById<ImageView>(R.id.imageView)
-                ?.setImageBitmap(filter.processFilter(bm))
+                ?.setImageBitmap(filter.processFilter(bm2))
+        val uri = (viewPager.adapter as FilterImageAdapter).images[viewPager.currentItem]
+        saveFilteredBitmap(uri, bm2)
+    }
+
+    private fun saveFilteredBitmap(uri: Uri, bitmap: Bitmap) {
+        try {
+            // Initialize a new file instance to save bitmap object
+            val file = File(uri.path)
+            // Compress the bitmap and save in jpg format
+            val stream: OutputStream = FileOutputStream(file)
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+            stream.flush()
+            stream.close()
+            Log.i("FilterActivity", "saveFilteredBitmap $uri")
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
     }
 
     companion object {
@@ -124,7 +142,7 @@ class FilterActivity : AppCompatActivity(), ThumbnailCallback, OnViewPagerImageL
         }
     }
 
-    class FilterImageAdapter(private val context: Context, private val images: List<Uri>,
+    class FilterImageAdapter(private val context: Context, val images: List<Uri>,
                              private val listener: OnViewPagerImageLoad) : PagerAdapter() {
         var bitmaps: LinkedHashMap<Int, Bitmap?> = LinkedHashMap()
         override fun isViewFromObject(view: View, `object`: Any): Boolean {
@@ -135,7 +153,6 @@ class FilterActivity : AppCompatActivity(), ThumbnailCallback, OnViewPagerImageL
             return images.size
         }
 
-        @SuppressLint("InflateParams")
         override fun instantiateItem(container: ViewGroup, position: Int): Any {
             val layoutInflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
             val view = layoutInflater.inflate(R.layout.filter_images, container, false)
