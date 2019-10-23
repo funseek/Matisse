@@ -386,4 +386,9 @@ public final class SelectionCreator {
         }
     }
 
+    public SelectionCreator showOther(boolean showOther) {
+        mSelectionSpec.showOther = showOther;
+        return this;
+    }
+
 }

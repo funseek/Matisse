@@ -24,6 +24,7 @@ import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.v4.content.CursorLoader;
 
+import com.zhihu.matisse.R;
 import com.zhihu.matisse.internal.entity.Album;
 import com.zhihu.matisse.internal.entity.SelectionSpec;
 
@@ -109,7 +110,15 @@ public class AlbumLoader extends CursorLoader {
         allAlbum.addRow(new String[]{Album.ALBUM_ID_ALL, Album.ALBUM_ID_ALL, Album.ALBUM_NAME_ALL, allAlbumCoverPath,
                 String.valueOf(totalCount)});
 
-        return new MergeCursor(new Cursor[]{allAlbum, albums});
+        if (SelectionSpec.getInstance().showOther) {
+            MatrixCursor otherAlbum = new MatrixCursor(COLUMNS);
+            otherAlbum.addRow(new String[]{
+                    Album.ALBUM_ID_OTHER, Album.ALBUM_ID_OTHER, Album.ALBUM_NAME_OTHER, null, "-1"
+            });
+            return new MergeCursor(new Cursor[]{allAlbum, albums, otherAlbum});
+        } else {
+            return new MergeCursor(new Cursor[]{allAlbum, albums});
+        }
     }
 
     @Override
