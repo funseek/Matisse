@@ -101,6 +101,7 @@ public class SampleActivity extends AppCompatActivity implements View.OnClickLis
 
                                                 }
                                             })
+                                            .showOther(true)
                                             .originalEnable(true)
                                             .maxOriginalSize(10)
                                             .maxCropSize(3000)

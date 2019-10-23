@@ -41,6 +41,8 @@ public class Album implements Parcelable {
     };
     public static final String ALBUM_ID_ALL = String.valueOf(-1);
     public static final String ALBUM_NAME_ALL = "All";
+    public static final String ALBUM_ID_OTHER = String.valueOf(-2);
+    public static final String ALBUM_NAME_OTHER = "Other...";
 
     private final String mId;
     private final String mCoverPath;
@@ -105,6 +107,8 @@ public class Album implements Parcelable {
     public String getDisplayName(Context context) {
         if (isAll()) {
             return context.getString(R.string.album_name_all);
+        } else if (isOther()) {
+            return ALBUM_NAME_OTHER;
         }
         return mDisplayName;
     }
@@ -112,6 +116,8 @@ public class Album implements Parcelable {
     public boolean isAll() {
         return ALBUM_ID_ALL.equals(mId);
     }
+
+    public boolean isOther() { return ALBUM_ID_OTHER.equals(mId); }
 
     public boolean isEmpty() {
         return mCount == 0;

@@ -57,6 +57,7 @@ public final class SelectionSpec {
     public int cropMaxSize;
     public boolean hasFilter;
     public OnCheckedListener onCheckedListener;
+    public boolean showOther;
 
     private SelectionSpec() {
     }
@@ -94,6 +95,7 @@ public final class SelectionSpec {
         originalMaxSize = Integer.MAX_VALUE;
         cropMaxSize = 4000;
         hasFilter = true;
+        showOther = false;
     }
 
     public boolean singleSelectionModeEnabled() {

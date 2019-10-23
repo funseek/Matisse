@@ -82,6 +82,7 @@ public class MatisseActivity extends AppCompatActivity implements UCropFragmentC
     private static final int REQUEST_CODE_PREVIEW = 23;
     private static final int REQUEST_CODE_CAPTURE = 24;
     private static final int REQUEST_CODE_FILTER = 25;
+    private static final int REQUEST_CODE_OPEN_DOCUMENT = 30;
     public static final String CHECK_STATE = "checkState";
     private final AlbumCollection mAlbumCollection = new AlbumCollection();
     private MediaStoreCompat mMediaStoreCompat;
@@ -324,7 +325,24 @@ public class MatisseActivity extends AppCompatActivity implements UCropFragmentC
             }, 400);
         } else if (requestCode == REQUEST_CODE_FILTER) {
             returnResult();
+        } else if (requestCode == REQUEST_CODE_OPEN_DOCUMENT) {
+
+            if (data != null) {
+                Uri contentUri = data.getData();
+                String path = "";
+                ArrayList<Uri> selected = new ArrayList<>();
+                selected.add(contentUri);
+                ArrayList<String> selectedPath = new ArrayList<>();
+                selectedPath.add(path);
+                Intent result = new Intent();
+                result.putParcelableArrayListExtra(EXTRA_RESULT_SELECTION, selected);
+                result.putStringArrayListExtra(EXTRA_RESULT_SELECTION_PATH, selectedPath);
+                setResult(RESULT_OK, result);
+                finish();
+            }
+
         }
+
     }
 
     private void galleryAddPic(Context context) {
@@ -476,6 +494,11 @@ public class MatisseActivity extends AppCompatActivity implements UCropFragmentC
         if (album.isAll() && album.isEmpty()) {
             mContainer.setVisibility(View.GONE);
             mEmptyView.setVisibility(View.VISIBLE);
+        } else if (album.isOther()) {
+            mContainer.setVisibility(View.GONE);
+            mEmptyView.setVisibility(View.VISIBLE);
+            performFileSearch();
+
         } else {
             mContainer.setVisibility(View.VISIBLE);
             mEmptyView.setVisibility(View.GONE);
@@ -486,6 +509,26 @@ public class MatisseActivity extends AppCompatActivity implements UCropFragmentC
                     .commitAllowingStateLoss();
         }
     }
+
+    private void performFileSearch() {
+
+        // ACTION_OPEN_DOCUMENT is the intent to choose a file via the system's file
+        // browser.
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+
+        // Filter to only show results that can be "opened", such as a
+        // file (as opposed to a list of contacts or timezones)
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+
+        // Filter to show only images, using the image MIME data type.
+        // If one wanted to search for ogg vorbis files, the type would be "audio/ogg".
+        // To search for all documents available via installed storage providers,
+        // it would be "*/*".
+        intent.setType("image/*");
+
+        startActivityForResult(intent, REQUEST_CODE_OPEN_DOCUMENT);
+    }
+
 
     @Override
     public void onUpdate() {
