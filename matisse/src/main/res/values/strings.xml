@@ -39,8 +39,13 @@
     <string name="button_original">Original</string>
     <string name="button_sure_default">Next</string>
     <string name="button_sure">Next(%1$d)</string>
-    <string name="title_filter">Filter</string>
-    <string name="next">Next</string>
 
+    <string name="title_filter">フィルタ</string>
+    <string name="title_trim">トリミング</string>
+    <string name="next">次へ</string>
+
+    <string name="video_background_color_title">背景色を選択してください</string>
+    <string name="background_color_update">背景色の変更</string>
+    <string name="rotation">回転</string>
     <string name="appbar_scrolling_view_behavior" translatable="false">android.support.design.widget.AppBarLayout$ScrollingViewBehavior</string>
 </resources>

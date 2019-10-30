@@ -19,15 +19,16 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.view.ViewPager;
-import android.support.v4.view.animation.FastOutSlowInInterpolator;
-import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
+import androidx.viewpager.widget.ViewPager;
 
 import com.zhihu.matisse.R;
 import com.zhihu.matisse.internal.entity.IncapableCause;
@@ -247,7 +248,7 @@ public abstract class BasePreviewActivity extends AppCompatActivity implements V
                 if (checkedNum > 0) {
                     mCheckView.setEnabled(true);
                 } else {
-                    mCheckView.setEnabled(!mSelectedCollection.maxSelectableReached());
+                    mCheckView.setEnabled(!mSelectedCollection.maxSelectableReached(item));
                 }
             } else {
                 boolean checked = mSelectedCollection.isSelected(item);
@@ -255,7 +256,7 @@ public abstract class BasePreviewActivity extends AppCompatActivity implements V
                 if (checked) {
                     mCheckView.setEnabled(true);
                 } else {
-                    mCheckView.setEnabled(!mSelectedCollection.maxSelectableReached());
+                    mCheckView.setEnabled(!mSelectedCollection.maxSelectableReached(item));
                 }
             }
             updateSize(item);

@@ -20,16 +20,17 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.tbruyelle.rxpermissions2.RxPermissions;
 import com.zhihu.matisse.Matisse;
@@ -84,7 +85,7 @@ public class SampleActivity extends AppCompatActivity implements View.OnClickLis
                                             .capture(true)
                                             .captureStrategy(
                                                     new CaptureStrategy(true, "com.zhihu.matisse.sample.fileprovider","test"))
-                                            .maxSelectable(9)
+                                            .maxSelectablePerMediaType(5,1)
                                             .addFilter(new GifSizeFilter(320, 320, 5 * Filter.K * Filter.K))
                                             .gridExpectedSize(
                                                     getResources().getDimensionPixelSize(R.dimen.grid_expected_size))
@@ -104,7 +105,7 @@ public class SampleActivity extends AppCompatActivity implements View.OnClickLis
                                             .originalEnable(true)
                                             .maxOriginalSize(10)
                                             .maxCropSize(3000)
-                                            .filterEnable(false)
+                                            .filterEnable(true)
                                             .autoHideToolbarOnSingleTap(true)
                                             .setOnCheckedListener(new OnCheckedListener() {
                                                 @Override
@@ -154,7 +155,9 @@ public class SampleActivity extends AppCompatActivity implements View.OnClickLis
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_CODE_CHOOSE && resultCode == RESULT_OK) {
             mAdapter.setData(Matisse.obtainResult(data), Matisse.obtainPathResult(data));
-            Log.e("OnActivityResult ", String.valueOf(Matisse.obtainOriginalState(data)));
+            Log.i("OnActivityResult ", String.valueOf(data));
+            Log.i("OnActivityResult ", String.valueOf(Matisse.obtainResult(data)));
+            Log.i("OnActivityResult ", String.valueOf(Matisse.obtainPathResult(data)));
         }
     }
 

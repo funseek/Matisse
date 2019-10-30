@@ -20,13 +20,14 @@ import android.content.res.TypedArray;
 import android.database.Cursor;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.zhihu.matisse.R;
 import com.zhihu.matisse.internal.entity.Album;
@@ -69,12 +70,9 @@ public class AlbumMediaAdapter extends
         if (viewType == VIEW_TYPE_CAPTURE) {
             View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.photo_capture_item, parent, false);
             CaptureViewHolder holder = new CaptureViewHolder(v);
-            holder.itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (v.getContext() instanceof OnPhotoCapture) {
-                        ((OnPhotoCapture) v.getContext()).capture();
-                    }
+            holder.itemView.setOnClickListener(v1 -> {
+                if (v1.getContext() instanceof OnPhotoCapture) {
+                    ((OnPhotoCapture) v1.getContext()).capture();
                 }
             });
             return holder;
@@ -133,7 +131,7 @@ public class AlbumMediaAdapter extends
                 mediaGrid.setCheckEnabled(true);
                 mediaGrid.setCheckedNum(checkedNum);
             } else {
-                if (mSelectedCollection.maxSelectableReached()) {
+                if (mSelectedCollection.maxSelectableReached(item)) {
                     mediaGrid.setCheckEnabled(false);
                     mediaGrid.setCheckedNum(CheckView.UNCHECKED);
                 } else {
@@ -147,7 +145,7 @@ public class AlbumMediaAdapter extends
                 mediaGrid.setCheckEnabled(true);
                 mediaGrid.setChecked(true);
             } else {
-                if (mSelectedCollection.maxSelectableReached()) {
+                if (mSelectedCollection.maxSelectableReached(item)) {
                     mediaGrid.setCheckEnabled(false);
                     mediaGrid.setChecked(false);
                 } else {
@@ -160,30 +158,29 @@ public class AlbumMediaAdapter extends
 
     @Override
     public void onThumbnailClicked(ImageView thumbnail, Item item, RecyclerView.ViewHolder holder) {
-        if (mOnMediaClickListener != null) {
-            int checkedNum = mSelectedCollection.checkedNumOf(item);
-            if (checkedNum == CheckView.UNCHECKED) {
-                if (assertAddSelection(holder.itemView.getContext(), item)) {
-                    mSelectedCollection.add(item);
-                    mOnMediaClickListener.onMediaClick(null, item, mPrevious, holder.getAdapterPosition());
-                }
-            } else {
-                mSelectedCollection.remove(item);
+        if (mSelectionSpec.showPreview) {
+            if (mOnMediaClickListener != null) {
+                mOnMediaClickListener.onMediaClick(null, item, holder.getAdapterPosition());
             }
-            notifyCheckStateChanged();
-
-            mPrevious = item;
+        } else {
+            updateSelectedItem(item, holder);
         }
     }
 
     @Override
     public void onCheckViewClicked(CheckView checkView, Item item, RecyclerView.ViewHolder holder) {
+        updateSelectedItem(item, holder);
+    }
+
+    private void updateSelectedItem(Item item, RecyclerView.ViewHolder holder) {
         if (mSelectionSpec.countable) {
             int checkedNum = mSelectedCollection.checkedNumOf(item);
             if (checkedNum == CheckView.UNCHECKED) {
                 if (assertAddSelection(holder.itemView.getContext(), item)) {
                     mSelectedCollection.add(item);
                     notifyCheckStateChanged();
+                    mOnMediaClickListener.onMediaAdded(item, mPrevious);
+                    mPrevious = item;
                 }
             } else {
                 mSelectedCollection.remove(item);
@@ -197,6 +194,8 @@ public class AlbumMediaAdapter extends
                 if (assertAddSelection(holder.itemView.getContext(), item)) {
                     mSelectedCollection.add(item);
                     notifyCheckStateChanged();
+                    mOnMediaClickListener.onMediaAdded(item, mPrevious);
+                    mPrevious = item;
                 }
             }
         }
@@ -273,7 +272,8 @@ public class AlbumMediaAdapter extends
     }
 
     public interface OnMediaClickListener {
-        void onMediaClick(Album album, Item item, Item mPrevious, int adapterPosition);
+        void onMediaClick(Album album, Item item, int adapterPosition);
+        void onMediaAdded(Item item, Item prev);
     }
 
     public interface OnPhotoCapture {

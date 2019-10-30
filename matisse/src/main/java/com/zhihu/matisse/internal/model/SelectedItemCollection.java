@@ -145,7 +145,7 @@ public class SelectedItemCollection {
     public List<Uri> asListOfUri() {
         List<Uri> uris = new ArrayList<>();
         for (Item item : mItems) {
-            uris.add(item.uriCrop);
+            uris.add(item.uri);
         }
         return uris;
     }
@@ -167,8 +167,8 @@ public class SelectedItemCollection {
     }
 
     public IncapableCause isAcceptable(Item item) {
-        if (maxSelectableReached()) {
-            int maxSelectable = currentMaxSelectable();
+        if (maxSelectableReached(item)) {
+            int maxSelectable = currentMaxSelectable(item);
             String cause;
 
             try {
@@ -197,18 +197,27 @@ public class SelectedItemCollection {
         return PhotoMetadataUtils.isAcceptable(mContext, item);
     }
 
-    public boolean maxSelectableReached() {
-        return mItems.size() == currentMaxSelectable();
+    public boolean maxSelectableReached(Item item) {
+        SelectionSpec spec = SelectionSpec.getInstance();
+        int maxSelectable = currentMaxSelectable(item);
+        if (spec.maxSelectable > 0) {
+            return count() >= maxSelectable;
+        } else if (item.isImage()) {
+            return countImage() >= maxSelectable;
+        } else if (item.isVideo()) {
+            return countVideo() >= maxSelectable;
+        }
+        return count() >= maxSelectable;
     }
 
     // depends
-    private int currentMaxSelectable() {
+    private int currentMaxSelectable(Item item) {
         SelectionSpec spec = SelectionSpec.getInstance();
         if (spec.maxSelectable > 0) {
             return spec.maxSelectable;
-        } else if (mCollectionType == COLLECTION_IMAGE) {
+        } else if (item.isImage()) {
             return spec.maxImageSelectable;
-        } else if (mCollectionType == COLLECTION_VIDEO) {
+        } else if (item.isVideo()) {
             return spec.maxVideoSelectable;
         } else {
             return spec.maxSelectable;
@@ -249,8 +258,36 @@ public class SelectedItemCollection {
         return mItems.size();
     }
 
+    public int countImage() {
+        int count = 0;
+        for (Item item : mItems) if (item.isImage()) count++;
+        return count;
+    }
+
+    public int countVideo() {
+        int count = 0;
+        for (Item item : mItems) if (item.isVideo()) count++;
+        return count;
+    }
+
     public int checkedNumOf(Item item) {
         int index = new ArrayList<>(mItems).indexOf(item);
         return index == -1 ? CheckView.UNCHECKED : index + 1;
+    }
+
+    public boolean hasImage() {
+        return mCollectionType == COLLECTION_IMAGE || mCollectionType == COLLECTION_MIXED;
+    }
+
+    public boolean hasVideo() {
+        return mCollectionType == COLLECTION_VIDEO || mCollectionType == COLLECTION_MIXED;
+    }
+
+    public void updateItem(Item result) {
+        for (Item item : mItems)
+            if (item.isVideo()) {
+                item.uri = result.uri;
+                break;
+            }
     }
 }
