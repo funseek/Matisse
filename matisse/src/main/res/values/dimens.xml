@@ -25,4 +25,8 @@
     <dimen name="recycler_size">100dp</dimen>
     <dimen name="thumbnail_horizontal_padding">8dp</dimen>
     <dimen name="thumbnail_vertical_padding">32dp</dimen>
+
+    <dimen name="selector_ripple_size">48dp</dimen>
+    <dimen name="selector_disabled_size">16dp</dimen>
+    <dimen name="selector_enabled_size">24dp</dimen>
 </resources>

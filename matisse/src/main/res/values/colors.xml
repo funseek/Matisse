@@ -15,9 +15,20 @@
   limitations under the License.
   -->
 <resources>
-
+    <color name="colorAccent">#62B384</color>
+    <color name="gray">#808080</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
     <color name="preview_bottom_toolbar_bg">#CC000000</color>
     <color name="preview_bottom_size">#61FFFFFF</color>
     <color name="thumb_background_color">#FFF</color>
     <color name="colorBlueLink">#0645AD</color>
+
+    <color name="crop_background_gray">#dddddd</color>
+    <color name="crop_background_dark">#444444</color>
+    <color name="crop_background_pink">#ffd3de</color>
+    <color name="crop_background_flesh">#fff1c4</color>
+    <color name="crop_background_green">#e7ffe5</color>
+    <color name="crop_background_blue">#e5efff</color>
+    <color name="crop_background_brown">#d9cebe</color>
 </resources>

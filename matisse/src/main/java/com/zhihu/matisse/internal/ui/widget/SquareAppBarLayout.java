@@ -3,7 +3,9 @@ package com.zhihu.matisse.internal.ui.widget;
 import android.content.Context;
 import android.util.AttributeSet;
 
-public class SquareAppBarLayout extends android.support.design.widget.AppBarLayout {
+import com.google.android.material.appbar.AppBarLayout;
+
+public class SquareAppBarLayout extends AppBarLayout {
 
     public SquareAppBarLayout(Context context) {
         super(context);

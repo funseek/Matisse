@@ -24,16 +24,9 @@ import android.database.Cursor;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -42,6 +35,14 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
+
+import com.daasuu.mp4compose.composer.Mp4Composer;
 import com.yalantis.ucrop.UCrop;
 import com.yalantis.ucrop.UCropFragment;
 import com.yalantis.ucrop.UCropFragmentCallback;
@@ -51,6 +52,7 @@ import com.zhihu.matisse.internal.entity.Item;
 import com.zhihu.matisse.internal.entity.SelectionSpec;
 import com.zhihu.matisse.internal.model.AlbumCollection;
 import com.zhihu.matisse.internal.model.SelectedItemCollection;
+import com.zhihu.matisse.internal.ui.AlbumPreviewActivity;
 import com.zhihu.matisse.internal.ui.BasePreviewActivity;
 import com.zhihu.matisse.internal.ui.MediaSelectionFragment;
 import com.zhihu.matisse.internal.ui.SelectedPreviewActivity;
@@ -74,7 +76,7 @@ public class MatisseActivity extends AppCompatActivity implements UCropFragmentC
         AlbumCollection.AlbumCallbacks, AdapterView.OnItemSelectedListener,
         MediaSelectionFragment.SelectionProvider, View.OnClickListener,
         AlbumMediaAdapter.CheckStateListener, AlbumMediaAdapter.OnMediaClickListener,
-        AlbumMediaAdapter.OnPhotoCapture {
+        AlbumMediaAdapter.OnPhotoCapture, Mp4Composer.Listener {
 
     public static final String EXTRA_RESULT_SELECTION = "extra_result_selection";
     public static final String EXTRA_RESULT_SELECTION_PATH = "extra_result_selection_path";
@@ -82,6 +84,7 @@ public class MatisseActivity extends AppCompatActivity implements UCropFragmentC
     private static final int REQUEST_CODE_PREVIEW = 23;
     private static final int REQUEST_CODE_CAPTURE = 24;
     private static final int REQUEST_CODE_FILTER = 25;
+    private static final int REQUEST_CODE_TRIM_VIDEO = 26;
     public static final String CHECK_STATE = "checkState";
     private final AlbumCollection mAlbumCollection = new AlbumCollection();
     private MediaStoreCompat mMediaStoreCompat;
@@ -99,7 +102,9 @@ public class MatisseActivity extends AppCompatActivity implements UCropFragmentC
     private CheckRadioView mOriginal;
     private boolean mOriginalEnable;
     private ProgressDialog mProgressDialog;
+
     private boolean clickNextButton = false;
+    private boolean isTrimVideo = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -213,10 +218,16 @@ public class MatisseActivity extends AppCompatActivity implements UCropFragmentC
 
         if (clickNextButton) {
             clickNextButton = false;
-            if (mSpec.hasFilter) startFilterActivity();
-            else returnResult();
+            handleNextAction();
         }
         hideProgress();
+    }
+
+    private void handleNextAction() {
+        if (mSpec.hasTrimVideo && mSelectedCollection.hasVideo() && !isTrimVideo)
+            startVideoEditorActivity();
+        else if (mSpec.hasFilter && mSelectedCollection.hasImage()) startFilterActivity();
+        else returnResult();
     }
 
     private void returnResult() {
@@ -230,6 +241,16 @@ public class MatisseActivity extends AppCompatActivity implements UCropFragmentC
         finish();
     }
 
+    private void startVideoEditorActivity() {
+        Intent intent = new Intent(this, VideoEditorActivity.class);
+        for (Item item : mSelectedCollection.asList())
+            if (item.isVideo()) {
+                intent.putExtra(VideoEditorActivity.PATH_ARG, item);
+                break;
+            }
+        startActivityForResult(intent, REQUEST_CODE_TRIM_VIDEO);
+    }
+
     private void startFilterActivity() {
         Intent intent = new Intent(this, FilterActivity.class);
         ArrayList<Uri> selectedUris = (ArrayList<Uri>) mSelectedCollection.asListOfUri();
@@ -238,7 +259,7 @@ public class MatisseActivity extends AppCompatActivity implements UCropFragmentC
     }
 
     public void showProgress() {
-        hideProgress();
+        if (mProgressDialog != null && mProgressDialog.isShowing()) return;
         mProgressDialog = ProgressDialog.show(this, null, "Please wait...");
     }
 
@@ -311,19 +332,17 @@ public class MatisseActivity extends AppCompatActivity implements UCropFragmentC
             result.putParcelableArrayListExtra(EXTRA_RESULT_SELECTION, selected);
             result.putStringArrayListExtra(EXTRA_RESULT_SELECTION_PATH, selectedPath);
             setResult(RESULT_OK, result);
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
-                MatisseActivity.this.revokeUriPermission(contentUri,
-                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
             galleryAddPic(getApplicationContext());
             Handler handler = new Handler(Looper.getMainLooper());
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    onAlbumSelected(Album.valueOf(mAlbumsAdapter.getCursor()));
-                }
-            }, 400);
+            handler.postDelayed(() -> onAlbumSelected(Album.valueOf(mAlbumsAdapter.getCursor())), 400);
         } else if (requestCode == REQUEST_CODE_FILTER) {
             returnResult();
+        } else if (requestCode == REQUEST_CODE_TRIM_VIDEO) {
+            Item result = data.getParcelableExtra(VideoEditorActivity.PATH_ARG);
+            mSelectedCollection.updateItem(result);
+
+            isTrimVideo = true;
+            handleNextAction();
         }
     }
 
@@ -411,8 +430,7 @@ public class MatisseActivity extends AppCompatActivity implements UCropFragmentC
                     MediaSelectionFragment.class.getSimpleName());
             if (mediaSelectionFragment instanceof MediaSelectionFragment) {
                 if (((MediaSelectionFragment) mediaSelectionFragment).onNextButtonClick()) {
-                    if (mSpec.hasFilter) startFilterActivity();
-                    else returnResult();
+                    handleNextAction();
                 }
             }
         } else if (v.getId() == R.id.originalLayout) {
@@ -499,13 +517,18 @@ public class MatisseActivity extends AppCompatActivity implements UCropFragmentC
     }
 
     @Override
-    public void onMediaClick(Album album, Item item, Item mPrevious, int adapterPosition) {
-//        Intent intent = new Intent(this, AlbumPreviewActivity.class);
-//        intent.putExtra(AlbumPreviewActivity.EXTRA_ALBUM, album);
-//        intent.putExtra(AlbumPreviewActivity.EXTRA_ITEM, item);
-//        intent.putExtra(BasePreviewActivity.EXTRA_DEFAULT_BUNDLE, mSelectedCollection.getDataWithBundle());
-//        intent.putExtra(BasePreviewActivity.EXTRA_RESULT_ORIGINAL_ENABLE, mOriginalEnable);
-        //startActivityForResult(intent, REQUEST_CODE_PREVIEW);
+    public void onMediaClick(Album album, Item item, int adapterPosition) {
+        Intent intent = new Intent(this, AlbumPreviewActivity.class);
+        intent.putExtra(AlbumPreviewActivity.EXTRA_ALBUM, album);
+        intent.putExtra(AlbumPreviewActivity.EXTRA_ITEM, item);
+        intent.putExtra(BasePreviewActivity.EXTRA_DEFAULT_BUNDLE, mSelectedCollection.getDataWithBundle());
+        intent.putExtra(BasePreviewActivity.EXTRA_RESULT_ORIGINAL_ENABLE, mOriginalEnable);
+        startActivityForResult(intent, REQUEST_CODE_PREVIEW);
+    }
+
+    @Override
+    public void onMediaAdded(Item item, Item prev) {
+
     }
 
     @Override
@@ -520,4 +543,29 @@ public class MatisseActivity extends AppCompatActivity implements UCropFragmentC
         }
     }
 
+    @Override
+    public void onProgress(double progress) {
+        Log.d(this + "", "onProgress = " + progress);
+        showProgress();
+    }
+
+    @Override
+    public void onCompleted() {
+        Log.d(this + "", "onCompleted()");
+        if (clickNextButton) {
+            clickNextButton = false;
+            handleNextAction();
+        }
+        hideProgress();
+    }
+
+    @Override
+    public void onCanceled() {
+    }
+
+    @Override
+    public void onFailed(Exception exception) {
+        Log.d(this + "", "onFailed()");
+        hideProgress();
+    }
 }

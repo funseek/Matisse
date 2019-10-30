@@ -19,12 +19,13 @@ package com.zhihu.matisse;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Build;
-import android.support.annotation.IntDef;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.RequiresApi;
-import android.support.annotation.StyleRes;
-import android.support.v4.app.Fragment;
+
+import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.annotation.StyleRes;
+import androidx.fragment.app.Fragment;
 
 import com.zhihu.matisse.engine.ImageEngine;
 import com.zhihu.matisse.filter.Filter;
@@ -258,8 +259,19 @@ public final class SelectionCreator {
     }
 
     /**
+     * Enable/disable the trim Video.
+     *
+     * @param enable is enable. Default value is true
+     * @return {@link SelectionCreator} for fluent API.
+     */
+    public SelectionCreator trimVideoEnable(boolean enable) {
+        mSelectionSpec.hasTrimVideo = enable;
+        return this;
+    }
+
+    /**
      * Capture strategy provided for the location to save photos including internal and external
-     * storage and also a authority for {@link android.support.v4.content.FileProvider}.
+     * storage and also a authority for {@link androidx.core.content.FileProvider}.
      *
      * @param captureStrategy {@link CaptureStrategy}, needed only when capturing is enabled.
      * @return {@link SelectionCreator} for fluent API.
@@ -364,6 +376,11 @@ public final class SelectionCreator {
         mSelectionSpec.onCheckedListener = listener;
         return this;
     }
+
+//    public SelectionCreator showPreview(boolean showPreview) {
+//        mSelectionSpec.showPreview = showPreview;
+//        return this;
+//    }
 
     /**
      * Start to select media and wait for result.

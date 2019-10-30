@@ -17,7 +17,8 @@
 package com.zhihu.matisse.internal.entity;
 
 import android.content.pm.ActivityInfo;
-import android.support.annotation.StyleRes;
+
+import androidx.annotation.StyleRes;
 
 import com.zhihu.matisse.MimeType;
 import com.zhihu.matisse.R;
@@ -56,6 +57,8 @@ public final class SelectionSpec {
     public int originalMaxSize;
     public int cropMaxSize;
     public boolean hasFilter;
+    public boolean hasTrimVideo;
+    public boolean showPreview;
     public OnCheckedListener onCheckedListener;
 
     private SelectionSpec() {
@@ -94,6 +97,8 @@ public final class SelectionSpec {
         originalMaxSize = Integer.MAX_VALUE;
         cropMaxSize = 4000;
         hasFilter = true;
+        hasTrimVideo = true;
+        showPreview = false;
     }
 
     public boolean singleSelectionModeEnabled() {
